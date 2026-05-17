@@ -47,11 +47,11 @@ User Query
 
 ### Why debateX?
 
-| Single LLM | debateX Council |
-|---|---|
-| One perspective, one blind spot | Multiple perspectives cross-checked |
-| No internal disagreement signal | Peer review surfaces contradictions |
-| Hard to evaluate model quality | Aggregate rankings benchmark in real time |
+| Single LLM                       | debateX Council                            |
+| -------------------------------- | ------------------------------------------ |
+| One perspective, one blind spot  | Multiple perspectives cross-checked        |
+| No internal disagreement signal  | Peer review surfaces contradictions        |
+| Hard to evaluate model quality   | Aggregate rankings benchmark in real time  |
 | Bias baked into one training run | Anonymization neutralizes inter-model bias |
 
 ---
@@ -61,12 +61,15 @@ User Query
 debateX uses a **three-stage deliberation pipeline** with a lightweight central orchestrator:
 
 ### Stage 1 — Independent Opinions
+
 Query dispatched in parallel to all council members via OpenRouter. Responses collected independently — no model sees another's output at this stage.
 
 ### Stage 2 — Anonymized Peer Review
+
 Each model receives the full set of responses with identities stripped. Models are assigned random labels (`Model A`, `Model B`, etc.) per session. Each council member ranks and critiques every response. Anonymization prevents sycophantic bias toward known providers.
 
 ### Stage 3 — Chairman Synthesis
+
 A designated Chairman LLM (configurable) receives all Stage 1 responses, all Stage 2 reviews, and aggregate rankings. It produces a single, high-confidence final answer incorporating the strongest reasoning from the council.
 
 ### Key Design Decisions
@@ -82,16 +85,16 @@ A designated Chairman LLM (configurable) receives all Stage 1 responses, all Sta
 
 ### Recommended Stack
 
-| Layer | Technology | Rationale |
-|---|---|---|
-| **Backend** | Python 3.11+ · FastAPI | Async-native, OpenAPI docs free, type-safe with Pydantic |
-| **LLM Gateway** | OpenRouter | Single key → GPT, Claude, Gemini, Grok, Mistral, Llama |
-| **Frontend** | React 18 · TypeScript · Vite | Fast HMR, component isolation, tab-based council UI |
-| **Styling** | Tailwind CSS | Zero-config utility classes, dark mode trivial |
-| **Package Mgmt** | `uv` (Python) · `npm` (JS) | `uv` dramatically faster than pip for local dev |
-| **Persistence** | SQLite (default) · PostgreSQL (scale) | Conversation history; `metadata` fields stay in-memory only |
-| **Deployment** | Docker Compose | Single command spin-up, reproducible across machines |
-| **Process Mgr** | Uvicorn + Gunicorn | Production ASGI with worker control |
+| Layer            | Technology                            | Rationale                                                   |
+| ---------------- | ------------------------------------- | ----------------------------------------------------------- |
+| **Backend**      | Python 3.11+ · FastAPI                | Async-native, OpenAPI docs free, type-safe with Pydantic    |
+| **LLM Gateway**  | OpenRouter                            | Single key → GPT, Claude, Gemini, Grok, Mistral, Llama      |
+| **Frontend**     | React 18 · TypeScript · Vite          | Fast HMR, component isolation, tab-based council UI         |
+| **Styling**      | Tailwind CSS                          | Zero-config utility classes, dark mode trivial              |
+| **Package Mgmt** | `uv` (Python) · `npm` (JS)            | `uv` dramatically faster than pip for local dev             |
+| **Persistence**  | SQLite (default) · PostgreSQL (scale) | Conversation history; `metadata` fields stay in-memory only |
+| **Deployment**   | Docker Compose                        | Single command spin-up, reproducible across machines        |
+| **Process Mgr**  | Uvicorn + Gunicorn                    | Production ASGI with worker control                         |
 
 ### Runtime Requirements
 
@@ -126,7 +129,7 @@ tailwindcss
 ### 1. Clone
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/debateX.git
+git clone https://github.com/musfiramahjabeenmm/debateX.git
 cd debateX
 ```
 
@@ -150,14 +153,20 @@ Get a key at [openrouter.ai/keys](https://openrouter.ai/keys). OpenRouter provid
 # Install uv (fast Python package manager)
 pip install uv
 
-# Install dependencies and run
+# Install dependencies (from backend directory)
 cd backend
 uv sync
-uv run uvicorn main:app --reload --port 8000
+
+# Run the server (from project root directory)
+cd ..
+uv run python -m backend.main
+
+# Or, for hot-reloading during development:
+# uv run uvicorn backend.main:app --reload --port 8001
 ```
 
-API available at `http://localhost:8000`  
-Docs at `http://localhost:8000/docs`
+API available at `http://localhost:8001`  
+Docs at `http://localhost:8001/docs`
 
 ### 4. Frontend
 
@@ -188,10 +197,14 @@ Edit `backend/config/council.json` to define your LLM panel:
 ```json
 {
   "council": [
-    { "id": "gpt4o",          "model": "openai/gpt-4o",               "enabled": true },
-    { "id": "claude-sonnet",  "model": "anthropic/claude-sonnet-4-5", "enabled": true },
-    { "id": "gemini-pro",     "model": "google/gemini-pro-1.5",       "enabled": true },
-    { "id": "grok",           "model": "x-ai/grok-3",                 "enabled": true }
+    { "id": "gpt4o", "model": "openai/gpt-4o", "enabled": true },
+    {
+      "id": "claude-sonnet",
+      "model": "anthropic/claude-sonnet-4-5",
+      "enabled": true
+    },
+    { "id": "gemini-pro", "model": "google/gemini-pro-1.5", "enabled": true },
+    { "id": "grok", "model": "x-ai/grok-3", "enabled": true }
   ],
   "chairman": "claude-sonnet",
   "anonymize": true
@@ -202,15 +215,15 @@ Any model available on OpenRouter can be added. The `chairman` field must match 
 
 ### Environment Variables
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `OPENROUTER_API_KEY` | ✅ | — | OpenRouter API key |
-| `CHAIRMAN_MODEL` | ❌ | config value | Override chairman at runtime |
-| `MAX_COUNCIL_MEMBERS` | ❌ | `6` | Cap parallel requests |
-| `STAGE2_TIMEOUT_SECONDS` | ❌ | `60` | Peer review timeout |
-| `ENABLE_HISTORY` | ❌ | `true` | Persist conversations to DB |
-| `DATABASE_URL` | ❌ | `sqlite:///./debatex.db` | Override with Postgres URL |
-| `CORS_ORIGINS` | ❌ | `http://localhost:5173` | Comma-separated allowed origins |
+| Variable                 | Required | Default                  | Description                     |
+| ------------------------ | -------- | ------------------------ | ------------------------------- |
+| `OPENROUTER_API_KEY`     | ✅       | —                        | OpenRouter API key              |
+| `CHAIRMAN_MODEL`         | ❌       | config value             | Override chairman at runtime    |
+| `MAX_COUNCIL_MEMBERS`    | ❌       | `6`                      | Cap parallel requests           |
+| `STAGE2_TIMEOUT_SECONDS` | ❌       | `60`                     | Peer review timeout             |
+| `ENABLE_HISTORY`         | ❌       | `true`                   | Persist conversations to DB     |
+| `DATABASE_URL`           | ❌       | `sqlite:///./debatex.db` | Override with Postgres URL      |
+| `CORS_ORIGINS`           | ❌       | `http://localhost:5173`  | Comma-separated allowed origins |
 
 ---
 
@@ -221,15 +234,17 @@ Any model available on OpenRouter can be added. The `chairman` field must match 
 Submit a query to the full three-stage council pipeline.
 
 **Request**
+
 ```json
 {
   "query": "What are the trade-offs between microservices and monoliths for a team of 5?",
-  "council_override": ["gpt4o", "claude-sonnet"],   // optional: subset of council
+  "council_override": ["gpt4o", "claude-sonnet"], // optional: subset of council
   "stream": false
 }
 ```
 
 **Response**
+
 ```json
 {
   "session_id": "uuid",
@@ -237,9 +252,7 @@ Submit a query to the full three-stage council pipeline.
     { "label": "Model A", "response": "..." },
     { "label": "Model B", "response": "..." }
   ],
-  "stage2": [
-    { "reviewer": "Model A", "rankings": [2, 1], "critique": "..." }
-  ],
+  "stage2": [{ "reviewer": "Model A", "rankings": [2, 1], "critique": "..." }],
   "aggregate_rankings": { "Model A": 1.5, "Model B": 1.5 },
   "final_response": "...",
   "chairman_model": "anthropic/claude-sonnet-4-5",
@@ -329,12 +342,12 @@ npm run lint
 
 debateX multiplies inference cost by the number of council members across three stages. For a 4-member council:
 
-| Stage | Calls | Notes |
-|---|---|---|
-| Stage 1 | 4 | Parallel, one per member |
-| Stage 2 | 4 | Each reviews all Stage 1 responses |
-| Stage 3 | 1 | Chairman only |
-| **Total** | **~9** | Per user query |
+| Stage     | Calls  | Notes                              |
+| --------- | ------ | ---------------------------------- |
+| Stage 1   | 4      | Parallel, one per member           |
+| Stage 2   | 4      | Each reviews all Stage 1 responses |
+| Stage 3   | 1      | Chairman only                      |
+| **Total** | **~9** | Per user query                     |
 
 Use smaller/cheaper models (Haiku, Flash, Mistral Nemo) in the council and reserve a large model for the Chairman to optimize cost-quality tradeoff.
 
