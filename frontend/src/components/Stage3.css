@@ -1,0 +1,11 @@
+.stage3 {
+  background-color: rgba(34, 211, 238, 0.05);
+  border: 1px solid rgba(34, 211, 238, 0.2);
+  padding: 24px;
+  border-radius: 12px;
+  margin-top: 32px;
+}
+
+.stage3 .stage-title {
+  color: var(--accent-cyan);
+}

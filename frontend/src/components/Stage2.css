@@ -1,0 +1,54 @@
+.stage-description {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-bottom: 24px;
+}
+
+.parsed-ranking {
+  margin-top: 24px;
+  padding: 16px;
+  background-color: var(--bg-tertiary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.parsed-ranking ol {
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
+.aggregate-rankings {
+  margin-top: 40px;
+  padding: 24px;
+  background-color: var(--bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.aggregate-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.aggregate-item:last-child {
+  border-bottom: none;
+}
+
+.rank-position {
+  font-weight: 700;
+  color: var(--accent-cyan);
+  width: 32px;
+}
+
+.rank-model {
+  flex: 1;
+  font-weight: 500;
+}
+
+.rank-score {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
