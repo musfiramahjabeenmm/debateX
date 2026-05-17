@@ -42,9 +42,17 @@ async def query_model(
 
             data = response.json()
             message = data['choices'][0]['message']
+            content = message.get('content')
+            if not content:
+                # Check for alternative text fields commonly used by reasoning models
+                content = message.get('reasoning') or message.get('thought')
+                if not content and message.get('reasoning_details'):
+                    details = message.get('reasoning_details')
+                    if isinstance(details, list) and len(details) > 0:
+                        content = details[0].get('text')
 
             return {
-                'content': message.get('content'),
+                'content': content,
                 'reasoning_details': message.get('reasoning_details')
             }
 
@@ -88,14 +96,7 @@ async def query_models_parallel(
     # Wait for all to complete
     responses = await asyncio.gather(*tasks, return_exceptions=True)
 
-    # Check if any exception is a rate limit or credit error, and propagate it immediately
-    for resp in responses:
-        if isinstance(resp, Exception):
-            err_str = str(resp)
-            if "Rate limit" in err_str or "credits" in err_str or "429" in err_str or "402" in err_str:
-                raise resp
-
-    # Map models to their responses (converting other exceptions to None)
+    # Map models to their responses (converting exceptions to None)
     mapped_responses = {}
     for model, resp in zip(models, responses):
         if isinstance(resp, Exception):

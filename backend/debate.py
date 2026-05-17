@@ -287,8 +287,8 @@ Title:"""
     messages = [{"role": "user", "content": title_prompt}]
 
     try:
-        # Use nvidia/nemotron-3-nano-30b-a3b:free for title generation (extremely fast and free)
-        response = await query_model("nvidia/nemotron-3-nano-30b-a3b:free", messages, timeout=30.0)
+        # Use google/gemini-2.5-flash:free for title generation (extremely fast and free)
+        response = await query_model("google/gemini-2.5-flash:free", messages, timeout=30.0)
     except Exception:
         response = None
 
