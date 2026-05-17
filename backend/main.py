@@ -8,7 +8,6 @@ from typing import List, Dict, Any
 import uuid
 import json
 import asyncio
-
 from . import storage
 from .debate import run_full_debate, generate_conversation_title, stage1_collect_responses, stage2_collect_rankings, stage3_synthesize_final, calculate_aggregate_rankings
 
