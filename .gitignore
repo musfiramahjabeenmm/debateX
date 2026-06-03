@@ -1,12 +1,21 @@
-# Environment variables
-.env
-.env.*
-
-# Python Cache
+# Python-generated files
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
 
-# User Data
+# Virtual environments
+.venv
+
+# Keys and secrets
+.env
+
+# Data files
 data/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/

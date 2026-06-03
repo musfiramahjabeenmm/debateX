@@ -1,401 +1,207 @@
-<div align="center">
-
 # ⚖️ debateX
 
-**Multi-model deliberation engine. Ask once. Let the council decide.**
+**Enterprise-grade multi-LLM deliberation engine. Get council-vetted answers, not single-model guesses.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue?logo=python)](https://python.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://reactjs.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.110-009688?logo=fastapi)](https://fastapi.tiangolo.com)
-[![OpenRouter](https://img.shields.io/badge/Powered%20by-OpenRouter-orange)](https://openrouter.ai)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
-
-[Overview](#overview) · [Architecture](#architecture) · [Tech Stack](#tech-stack) · [Quick Start](#quick-start) · [Configuration](#configuration) · [API Reference](#api-reference) · [Contributing](#contributing)
-
-</div>
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100.0%2B-009688?logo=fastapi)](https://fastapi.tiangolo.com)
+[![Groq](https://img.shields.io/badge/Groq-Supported-orange)](https://groq.com)
 
 ---
 
-## Overview
+## 🌟 Overview
 
-**debateX** is a self-hosted, multi-LLM deliberation system inspired by [Andrej Karpathy's llm-council](https://github.com/karpathy/llm-council). Instead of routing your query to a single model, debateX convenes a council of LLMs — each producing an independent response, reviewing peers anonymously, and deferring to a designated Chairman for final synthesis.
+**debateX** is a production-ready, self-hosted multi-LLM deliberation platform. Instead of trusting a single model's isolated perspective, **debateX** orchestrates a dynamic council of diverse language models (powered by **Groq** and **OpenRouter**). 
 
-The result: **higher-quality, bias-reduced answers** for complex reasoning, architectural decisions, legal analysis, and any task where a single model's blind spots matter.
-
-```
-User Query
-    │
-    ▼
-┌───────────────────────────────────────────────────┐
-│  Stage 1 — Independent Opinions                   │
-│  GPT-4o · Gemini Pro · Claude Sonnet · Grok       │
-└───────────────────────┬───────────────────────────┘
-                        │ anonymized responses
-                        ▼
-┌───────────────────────────────────────────────────┐
-│  Stage 2 — Anonymized Peer Review                 │
-│  Each model critiques + ranks others' responses   │
-└───────────────────────┬───────────────────────────┘
-                        │ ranked evaluations
-                        ▼
-┌───────────────────────────────────────────────────┐
-│  Stage 3 — Chairman Synthesis                     │
-│  Designated LLM compiles the final answer         │
-└───────────────────────────────────────────────────┘
-```
-
-### Why debateX?
-
-| Single LLM                       | debateX Council                            |
-| -------------------------------- | ------------------------------------------ |
-| One perspective, one blind spot  | Multiple perspectives cross-checked        |
-| No internal disagreement signal  | Peer review surfaces contradictions        |
-| Hard to evaluate model quality   | Aggregate rankings benchmark in real time  |
-| Bias baked into one training run | Anonymization neutralizes inter-model bias |
+The platform passes query contexts through an advanced, anonymized multi-round cognitive debate structure, allowing models to cross-examine arguments, refine their logic, defend coordinates, and isolate potential flaws before a designated Chairman model delivers a beautifully synthesized final consensus.
 
 ---
 
-## Architecture
+## 🚀 Key Evolutionary Features
 
-debateX uses a **three-stage deliberation pipeline** with a lightweight central orchestrator:
+### 1. 🔄 Advanced 5-Round Deliberation Pipeline
+The orchestration layer has been evolved from a simple linear flow into a rigorous **5-Round Deliberation Pipeline**:
+* **Round 1 (Stage 1 - Respond)**: Council models generate independent, blind initial answers.
+* **Round 2 (Stage 2 - Peer Review & Rank)**: Council answers are completely anonymized, and models evaluate and rank their peers' answers to eliminate provider bias.
+* **Round 3 (Defend & Revise)**: Models are presented with the anonymous ranks, peer critiques, and their own positions, allowing them to defend their logic or revise their answers.
+* **Round 4 (Challenger Critique)**: A dedicated council member is designated as the **Challenger**. Its sole task is to construct a rigorous critique isolating the absolute weakest points of the leading answers.
+* **Round 5 (Stage 3 - Chairman Synthesis)**: The designated **Chairman (Moderator)** ingests the entire historical context of all four rounds to produce a high-confidence, comprehensive final response.
 
-### Stage 1 — Independent Opinions
+### 2. 🎭 Dynamic Cognitive Persona Allocation
+Incorporates a deterministic **shift-based role rotation** engine (`backend/roles.py`) that assigns specific behavioral personas per query:
+* **Reasoner (2-3 models)**: Drives deep analytical and conceptual logic.
+* **Fact-Checker (1 model)**: Equipped with dedicated Google-search capability to verify data bounds.
+* **Devil's Advocate (1 model)**: Challenges consensus and exposes hidden assumptions.
+* **Steelmanner (1 model)**: Re-articulates and strengthens competing arguments for fair assessment.
+* **Chairman (1 model)**: Orchestrates and synthesizes the discussion.
 
-Query dispatched in parallel to all council members via OpenRouter. Responses collected independently — no model sees another's output at this stage.
+### 3. 🎯 Fast Dual-Path Query Routing & Cost Estimation
+Features a highly optimized query router (`backend/router.py`) that:
+* Classifies incoming requests into one of 5 categories: `technical/code`, `creative`, `factual/research`, `ethical/philosophical`, or `math/logic`.
+* Runs a dual-path classification workflow (sub-second fast LLM classification, falling back gracefully to local regex keywords on network hiccups).
+* Recommends optimal model subsets, calculates token consumption projections, and outputs a predicted USD cost per query using calibrated pricing parameters.
 
-### Stage 2 — Anonymized Peer Review
-
-Each model receives the full set of responses with identities stripped. Models are assigned random labels (`Model A`, `Model B`, etc.) per session. Each council member ranks and critiques every response. Anonymization prevents sycophantic bias toward known providers.
-
-### Stage 3 — Chairman Synthesis
-
-A designated Chairman LLM (configurable) receives all Stage 1 responses, all Stage 2 reviews, and aggregate rankings. It produces a single, high-confidence final answer incorporating the strongest reasoning from the council.
-
-### Key Design Decisions
-
-- **Anonymization is architectural, not optional.** Identity masking happens in the orchestrator, not via prompt instructions.
-- **Rankings aggregate statistically.** `calculate_aggregate_rankings()` computes average rank position across all peer evaluations, not just majority vote.
-- **Metadata is ephemeral.** `label_to_model` mappings and `aggregate_rankings` are returned via API only — never written to storage.
-- **Zero agent framework dependency.** No LangChain, CrewAI, or AutoGen. Pure Python orchestration + direct API calls.
+### 4. ⚡ Real-Time SSE Stream & Interactive UI
+Upgraded to a high-speed Server-Sent Events (SSE) streaming API (`backend/main.py`) paired with an elegant, responsive React dashboard showcasing:
+* Live-updating stages, active round transitions, and aggregate peer ranks.
+* Markdown-supported raw outputs, peer critique maps, and detailed cost estimation widgets.
+* Sleek glassmorphic theme styling with tailored error reporting panels.
 
 ---
 
-## Tech Stack
+## 🛠️ System Architecture & Workflow
 
-### Recommended Stack
-
-| Layer            | Technology                            | Rationale                                                   |
-| ---------------- | ------------------------------------- | ----------------------------------------------------------- |
-| **Backend**      | Python 3.11+ · FastAPI                | Async-native, OpenAPI docs free, type-safe with Pydantic    |
-| **LLM Gateway**  | OpenRouter                            | Single key → GPT, Claude, Gemini, Grok, Mistral, Llama      |
-| **Frontend**     | React 18 · TypeScript · Vite          | Fast HMR, component isolation, tab-based council UI         |
-| **Styling**      | Tailwind CSS                          | Zero-config utility classes, dark mode trivial              |
-| **Package Mgmt** | `uv` (Python) · `npm` (JS)            | `uv` dramatically faster than pip for local dev             |
-| **Persistence**  | SQLite (default) · PostgreSQL (scale) | Conversation history; `metadata` fields stay in-memory only |
-| **Deployment**   | Docker Compose                        | Single command spin-up, reproducible across machines        |
-| **Process Mgr**  | Uvicorn + Gunicorn                    | Production ASGI with worker control                         |
-
-### Runtime Requirements
-
-```
-Python  ≥ 3.11
-Node.js ≥ 20 LTS
-npm     ≥ 10
-uv      (recommended) — pip install uv
-```
-
-### Key Dependencies
-
-```
-# Backend
-fastapi
-uvicorn[standard]
-httpx          # async OpenRouter calls
-pydantic-settings
-python-dotenv
-
-# Frontend
-react / react-dom
-typescript
-vite
-tailwindcss
+```mermaid
+graph TD
+    UserQuery[User Query] --> Router{Query Router}
+    Router -- LLM / Regex --> Classify[Category Classifier]
+    Classify --> Assign[Dynamic Persona Allocator]
+    Assign --> Round1[Round 1: Initial Responses]
+    Round1 --> Round2[Round 2: Anonymized Peer Review]
+    Round2 --> Round3[Round 3: Defend or Revise]
+    Round3 --> Round4[Round 4: Challenger Critique]
+    Round4 --> Round5[Round 5: Chairman Synthesis]
+    Round5 --> SSE[Real-Time SSE Streaming Output]
 ```
 
 ---
 
-## Quick Start
+## ⚙️ Supported Models
 
-### 1. Clone
+### **Groq Cloud API**
+* `groq/llama-3.3-70b-versatile` (Primary Chairman & High-Performance Synthesis)
+* `groq/openai/gpt-oss-120b` (Reasoning & Code Expert)
+* `groq/qwen/qwen3-32b` (Precision Logic Node)
+* `groq/llama-3.1-8b-instant` (High-Speed Processing)
 
+### **OpenRouter API (Free Tier)**
+* `deepseek/deepseek-v4-flash:free` (Default Moderator fallback)
+* `z-ai/glm-4.5-air:free` (Diverse Context processing)
+* `liquid/lfm-2.5-1.2b-instruct:free` (Lightweight semantic node)
+* `nvidia/nemotron-3-nano-30b-a3b:free` (Logical extraction)
+
+---
+
+## 📥 Quick Start Setup Guide
+
+Follow these steps to get your local environment configured and running in under **5 minutes**.
+
+### 1. Prerequisite Installations
+* **Python 3.11 or higher**
+* **Node.js v18 or higher**
+* **uv Package Manager** (highly recommended for sub-second Python dependency resolution)
+  * Install `uv` via: `pip install uv` or `curl -sSf https://astral.sh/uv/install.sh | sh`
+
+### 2. Clone & Setup Configuration
+Clone the repository to your workspace:
 ```bash
-git clone https://github.com/musfiramahjabeenmm/debateX.git
+git clone https://github.com/pvsaravanan/debateX.git
 cd debateX
 ```
 
-### 2. Environment
-
+Create and configure your `.env` environment file:
 ```bash
 cp .env.example .env
 ```
 
-Open `.env` and set your OpenRouter API key:
-
+Open `.env` and fill in your API credentials:
 ```env
-OPENROUTER_API_KEY=sk-or-xxxxxxxxxxxxxxxx
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+GROQ_API_KEY=your_groq_api_key_here
 ```
 
-Get a key at [openrouter.ai/keys](https://openrouter.ai/keys). OpenRouter provides unified access to all major providers under one credential.
+---
 
-### 3. Backend
+## 🏃 Running the Application
 
+### Method A: One-Click Launch (Recommended)
+
+* **Windows**: Double-click [run.bat](file:///c:/proj/debateX/run.bat) from your file explorer, or run it in Command Prompt:
+  ```cmd
+  run.bat
+  ```
+* **macOS / Linux**: Grant execution permissions and run [start.sh](file:///c:/proj/debateX/start.sh):
+  ```bash
+  chmod +x start.sh
+  ./start.sh
+  ```
+
+*These scripts automatically resolve dependencies (using `uv sync` & `npm install`), initialize local virtual environments, and boot up both the FastAPI backend server (port `8001`) and the Vite React frontend (port `5173`).*
+
+---
+
+### Method B: Manual Manual Commands
+
+#### 1. Setup & Run the Backend
+Using **`uv`** (Recommended):
 ```bash
-# Install uv (fast Python package manager)
-pip install uv
-
-# Install dependencies (from backend directory)
-cd backend
+# Sync dependencies and start uvicorn
 uv sync
-
-# Run the server (from project root directory)
-cd ..
 uv run python -m backend.main
-
-# Or, for hot-reloading during development:
-# uv run uvicorn backend.main:app --reload --port 8001
 ```
 
-API available at `http://localhost:8001`  
-Docs at `http://localhost:8001/docs`
+Using standard **`pip`**:
+```bash
+# Create a virtual environment
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
-### 4. Frontend
+# Install dependencies and run
+pip install -r requirements.txt
+python -m backend.main
+```
+*The backend server will run at: **http://localhost:8001***
 
+#### 2. Setup & Run the Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+*The frontend development server will run at: **http://localhost:5173***
 
-App available at `http://localhost:5173`
+---
 
-### Docker (Alternative)
+## 🧪 Running the Verification Test Suite
+
+Verify all models, dynamic routing modules, cost calculations, and role assignments work flawlessly by running the unit test suite:
 
 ```bash
-docker compose up --build
-```
+# Run all tests
+uv run python -m unittest tests/test_roles.py tests/test_router.py
 
-This starts backend on `:8000` and frontend on `:5173` with hot reload.
+# Or run individual modules
+uv run python -m unittest tests/test_roles.py
+uv run python -m unittest tests/test_router.py
+```
 
 ---
 
-## Configuration
+## 📖 Directory Structure
 
-### Council Members
-
-Edit `backend/config/council.json` to define your LLM panel:
-
-```json
-{
-  "council": [
-    { "id": "gpt4o", "model": "openai/gpt-4o", "enabled": true },
-    {
-      "id": "claude-sonnet",
-      "model": "anthropic/claude-sonnet-4-5",
-      "enabled": true
-    },
-    { "id": "gemini-pro", "model": "google/gemini-pro-1.5", "enabled": true },
-    { "id": "grok", "model": "x-ai/grok-3", "enabled": true }
-  ],
-  "chairman": "claude-sonnet",
-  "anonymize": true
-}
-```
-
-Any model available on OpenRouter can be added. The `chairman` field must match an `id` in the `council` array.
-
-### Environment Variables
-
-| Variable                 | Required | Default                  | Description                     |
-| ------------------------ | -------- | ------------------------ | ------------------------------- |
-| `OPENROUTER_API_KEY`     | ✅       | —                        | OpenRouter API key              |
-| `CHAIRMAN_MODEL`         | ❌       | config value             | Override chairman at runtime    |
-| `MAX_COUNCIL_MEMBERS`    | ❌       | `6`                      | Cap parallel requests           |
-| `STAGE2_TIMEOUT_SECONDS` | ❌       | `60`                     | Peer review timeout             |
-| `ENABLE_HISTORY`         | ❌       | `true`                   | Persist conversations to DB     |
-| `DATABASE_URL`           | ❌       | `sqlite:///./debatex.db` | Override with Postgres URL      |
-| `CORS_ORIGINS`           | ❌       | `http://localhost:5173`  | Comma-separated allowed origins |
-
----
-
-## API Reference
-
-### POST `/api/query`
-
-Submit a query to the full three-stage council pipeline.
-
-**Request**
-
-```json
-{
-  "query": "What are the trade-offs between microservices and monoliths for a team of 5?",
-  "council_override": ["gpt4o", "claude-sonnet"], // optional: subset of council
-  "stream": false
-}
-```
-
-**Response**
-
-```json
-{
-  "session_id": "uuid",
-  "stage1": [
-    { "label": "Model A", "response": "..." },
-    { "label": "Model B", "response": "..." }
-  ],
-  "stage2": [{ "reviewer": "Model A", "rankings": [2, 1], "critique": "..." }],
-  "aggregate_rankings": { "Model A": 1.5, "Model B": 1.5 },
-  "final_response": "...",
-  "chairman_model": "anthropic/claude-sonnet-4-5",
-  "latency_ms": 8420
-}
-```
-
-### GET `/api/council`
-
-Returns current council configuration and model availability.
-
-### GET `/api/history`
-
-Returns paginated conversation history (requires `ENABLE_HISTORY=true`).
-
-### DELETE `/api/history/{session_id}`
-
-Purges a specific session from storage.
-
----
-
-## Project Structure
-
-```
-debateX/
+```text
+├── .agent/               # Antigravity prompts and workflow integrations
 ├── backend/
-│   ├── main.py                  # FastAPI app entrypoint
-│   ├── config/
-│   │   └── council.json         # Council member definitions
-│   ├── core/
-│   │   ├── orchestrator.py      # 3-stage pipeline controller
-│   │   ├── anonymizer.py        # Label-to-model mapping
-│   │   └── ranker.py            # Aggregate ranking calculation
-│   ├── routers/
-│   │   ├── query.py
-│   │   └── history.py
-│   └── models/
-│       └── schemas.py           # Pydantic request/response models
+│   ├── config.py         # Dynamic multi-provider model registrations
+│   ├── debate.py         # Core 5-Round pipeline orchestration logic
+│   ├── groq.py           # Groq API client interface
+│   ├── llm.py            # Provider wrapper routing facade
+│   ├── main.py           # FastAPI server & SSE streaming routing endpoints
+│   ├── openrouter.py     # OpenRouter API client interface
+│   ├── roles.py          # Dynamic role assignments & persona definitions
+│   ├── router.py         # Category router, pricing table & cost calculations
+│   └── storage.py        # Serialized JSON storage utilities
 ├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── CouncilTabs.tsx  # Stage 1 tab view
-│   │   │   ├── ReviewPanel.tsx  # Stage 2 peer reviews
-│   │   │   └── FinalAnswer.tsx  # Stage 3 chairman output
-│   │   └── App.tsx
-│   └── vite.config.ts
-├── docker-compose.yml
-├── .env.example
-└── README.md
+│   ├── src/              # React components, style sheets, and pages
+│   └── package.json      # Frontend package details
+├── openspec/             # OpenSpec specifications library & changes archive
+├── tests/                # Verification test suites
+├── debateX.md            # Repository changes modification history logs
+└── README.md             # Systems overview & guide
 ```
 
 ---
 
-## Development
-
-### Run Tests
-
-```bash
-# Backend
-cd backend
-uv run pytest tests/ -v
-
-# Frontend
-cd frontend
-npm run test
-```
-
-### Linting
-
-```bash
-# Backend
-uv run ruff check . && uv run mypy .
-
-# Frontend
-npm run lint
-```
-
-### Adding a New Council Member
-
-1. Add the model to `backend/config/council.json`
-2. Verify the model string at [openrouter.ai/models](https://openrouter.ai/models)
-3. Restart backend — no code changes required
-
----
-
-## Cost Considerations
-
-debateX multiplies inference cost by the number of council members across three stages. For a 4-member council:
-
-| Stage     | Calls  | Notes                              |
-| --------- | ------ | ---------------------------------- |
-| Stage 1   | 4      | Parallel, one per member           |
-| Stage 2   | 4      | Each reviews all Stage 1 responses |
-| Stage 3   | 1      | Chairman only                      |
-| **Total** | **~9** | Per user query                     |
-
-Use smaller/cheaper models (Haiku, Flash, Mistral Nemo) in the council and reserve a large model for the Chairman to optimize cost-quality tradeoff.
-
----
-
-## Roadmap
-
-- [ ] Streaming support for Stage 3 chairman response
-- [ ] Configurable Stage 2 review prompts per domain (legal, medical, code)
-- [ ] Cost estimator before query submission
-- [ ] Session comparison — diff two council runs side by side
-- [ ] Plugin system for custom post-processing hooks
-- [ ] Export council transcripts as Markdown / PDF
-
----
-
-## Contributing
-
-PRs welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening one.
-
-```bash
-# Standard fork-and-PR flow
-git checkout -b feat/your-feature
-git commit -m "feat: describe your change"
-git push origin feat/your-feature
-# Open PR against main
-```
-
-Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/).  
-Issues: use the provided templates for bugs and feature requests.
-
----
-
-## License
-
-[MIT](LICENSE) — fork freely, build commercially, attribute appreciated.
-
----
-
-## Acknowledgements
-
-Built on the conceptual foundation of [Andrej Karpathy's llm-council](https://github.com/karpathy/llm-council).  
-Powered by [OpenRouter](https://openrouter.ai) for unified multi-provider LLM access.
-
----
-
-<div align="center">
-
-**debateX** — because one model is a monologue. A council is a verdict.
-
-</div>
+## ⚖️ License
+Licensed under the [MIT License](LICENSE).
