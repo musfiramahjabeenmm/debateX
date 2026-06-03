@@ -12,7 +12,7 @@
 
 ## Overview
 
-debateX is a production-ready, self-hosted multi-LLM deliberation platform. Instead of relying on a single model's isolated perspective, debateX orchestrates a dynamic council of diverse language models powered by Groq and OpenRouter. 
+debateX is a production-ready, self-hosted multi-LLM deliberation platform. Instead of relying on a single model's isolated perspective, debateX orchestrates a dynamic council of diverse language models powered by Groq and OpenRouter.
 
 The platform passes query contexts through an advanced, anonymized multi-round cognitive debate structure, allowing models to cross-examine arguments, refine their logic, defend coordinates, and isolate potential flaws before a designated Chairman model delivers a synthesized final consensus.
 
@@ -20,8 +20,8 @@ The platform passes query contexts through an advanced, anonymized multi-round c
 
 ## User Interface Showcase
 
-| Stage 1: Respond | Stage 2: Peer Review & Rank | Stage 3: Chairman Synthesis |
-| :---: | :---: | :---: |
+|               Stage 1: Respond                |               Stage 2: Peer Review & Rank                |               Stage 3: Chairman Synthesis                |
+| :-------------------------------------------: | :------------------------------------------------------: | :------------------------------------------------------: |
 | ![Stage 1: Respond](public/images/stage1.png) | ![Stage 2: Peer Review & Rank](public/images/stage2.png) | ![Stage 3: Chairman Synthesis](public/images/stage3.png) |
 
 ---
@@ -29,32 +29,40 @@ The platform passes query contexts through an advanced, anonymized multi-round c
 ## Key Features
 
 ### 1. Advanced 5-Round Deliberation Pipeline
+
 The orchestration layer runs a rigorous 5-round deliberation pipeline:
-* **Round 1 (Stage 1 - Respond)**: Council models generate independent, blind initial answers.
-* **Round 2 (Stage 2 - Peer Review & Rank)**: Council answers are completely anonymized, and models evaluate and rank their peers' answers to eliminate provider bias.
-* **Round 3 (Defend & Revise)**: Models are presented with the anonymous ranks, peer critiques, and their own positions, allowing them to defend their logic or revise their answers.
-* **Round 4 (Challenger Critique)**: A dedicated council member is designated as the Challenger. Its sole task is to construct a rigorous critique isolating the absolute weakest points of the leading answers.
-* **Round 5 (Stage 3 - Chairman Synthesis)**: The designated Chairman (Moderator) ingests the entire historical context of all four rounds to produce a high-confidence, comprehensive final response.
+
+- **Round 1 (Stage 1 - Respond)**: Council models generate independent, blind initial answers.
+- **Round 2 (Stage 2 - Peer Review & Rank)**: Council answers are completely anonymized, and models evaluate and rank their peers' answers to eliminate provider bias.
+- **Round 3 (Defend & Revise)**: Models are presented with the anonymous ranks, peer critiques, and their own positions, allowing them to defend their logic or revise their answers.
+- **Round 4 (Challenger Critique)**: A dedicated council member is designated as the Challenger. Its sole task is to construct a rigorous critique isolating the absolute weakest points of the leading answers.
+- **Round 5 (Stage 3 - Chairman Synthesis)**: The designated Chairman (Moderator) ingests the entire historical context of all four rounds to produce a high-confidence, comprehensive final response.
 
 ### 2. Dynamic Cognitive Persona Allocation
+
 Incorporates a deterministic shift-based role rotation engine (`backend/roles.py`) that assigns specific behavioral personas per query:
-* **Reasoner (2-3 models)**: Drives deep analytical and conceptual logic.
-* **Fact-Checker (1 model)**: Equipped with dedicated Google-search capability to verify data bounds.
-* **Devil's Advocate (1 model)**: Challenges consensus and exposes hidden assumptions.
-* **Steelmanner (1 model)**: Re-articulates and strengthens competing arguments for fair assessment.
-* **Chairman (1 model)**: Orchestrates and synthesizes the discussion.
+
+- **Reasoner (2-3 models)**: Drives deep analytical and conceptual logic.
+- **Fact-Checker (1 model)**: Equipped with dedicated Google-search capability to verify data bounds.
+- **Devil's Advocate (1 model)**: Challenges consensus and exposes hidden assumptions.
+- **Steelmanner (1 model)**: Re-articulates and strengthens competing arguments for fair assessment.
+- **Chairman (1 model)**: Orchestrates and synthesizes the discussion.
 
 ### 3. Fast Dual-Path Query Routing and Cost Estimation
+
 Features an optimized query router (`backend/router.py`) that:
-* Classifies incoming requests into one of 5 categories: `technical/code`, `creative`, `factual/research`, `ethical/philosophical`, or `math/logic`.
-* Runs a dual-path classification workflow (sub-second fast LLM classification, falling back gracefully to local regex keywords on network hiccups).
-* Recommends optimal model subsets, calculates token consumption projections, and outputs a predicted USD cost per query using calibrated pricing parameters.
+
+- Classifies incoming requests into one of 5 categories: `technical/code`, `creative`, `factual/research`, `ethical/philosophical`, or `math/logic`.
+- Runs a dual-path classification workflow (sub-second fast LLM classification, falling back gracefully to local regex keywords on network hiccups).
+- Recommends optimal model subsets, calculates token consumption projections, and outputs a predicted USD cost per query using calibrated pricing parameters.
 
 ### 4. Real-Time SSE Stream and Interactive UI
+
 Utilizes a high-speed Server-Sent Events (SSE) streaming API (`backend/main.py`) paired with an elegant, responsive React dashboard showcasing:
-* Live-updating stages, active round transitions, and aggregate peer ranks.
-* Markdown-supported raw outputs, peer critique maps, and detailed cost estimation widgets.
-* Sleek glassmorphic theme styling with tailored error reporting panels.
+
+- Live-updating stages, active round transitions, and aggregate peer ranks.
+- Markdown-supported raw outputs, peer critique maps, and detailed cost estimation widgets.
+- Sleek glassmorphic theme styling with tailored error reporting panels.
 
 ---
 
@@ -78,16 +86,18 @@ graph TD
 ## Supported Models
 
 ### Groq Cloud API
-* `groq/llama-3.3-70b-versatile` (Primary Chairman & High-Performance Synthesis)
-* `groq/openai/gpt-oss-120b` (Reasoning & Code Expert)
-* `groq/qwen/qwen3-32b` (Precision Logic Node)
-* `groq/llama-3.1-8b-instant` (High-Speed Processing)
+
+- `groq/llama-3.3-70b-versatile` (Primary Chairman & High-Performance Synthesis)
+- `groq/openai/gpt-oss-120b` (Reasoning & Code Expert)
+- `groq/qwen/qwen3-32b` (Precision Logic Node)
+- `groq/llama-3.1-8b-instant` (High-Speed Processing)
 
 ### OpenRouter API (Free Tier)
-* `deepseek/deepseek-v4-flash:free` (Default Moderator fallback)
-* `z-ai/glm-4.5-air:free` (Diverse Context processing)
-* `liquid/lfm-2.5-1.2b-instruct:free` (Lightweight semantic node)
-* `nvidia/nemotron-3-nano-30b-a3b:free` (Logical extraction)
+
+- `deepseek/deepseek-v4-flash:free` (Default Moderator fallback)
+- `z-ai/glm-4.5-air:free` (Diverse Context processing)
+- `liquid/lfm-2.5-1.2b-instruct:free` (Lightweight semantic node)
+- `nvidia/nemotron-3-nano-30b-a3b:free` (Logical extraction)
 
 ---
 
@@ -96,24 +106,29 @@ graph TD
 Follow these steps to get your local environment configured and running in under 5 minutes.
 
 ### 1. Prerequisite Installations
-* **Python 3.11 or higher**
-* **Node.js v18 or higher**
-* **uv Package Manager** (highly recommended for sub-second Python dependency resolution)
-  * Install `uv` via: `pip install uv` or `curl -sSf https://astral.sh/uv/install.sh | sh`
+
+- **Python 3.11 or higher**
+- **Node.js v18 or higher**
+- **uv Package Manager** (highly recommended for sub-second Python dependency resolution)
+  - Install `uv` via: `pip install uv` or `curl -sSf https://astral.sh/uv/install.sh | sh`
 
 ### 2. Clone and Setup Configuration
+
 Clone the repository to your workspace:
+
 ```bash
-git clone https://github.com/pvsaravanan/debateX.git
+git clone https://github.com/musfiramahjabeenmm/debateX.git
 cd debateX
 ```
 
 Create and configure your `.env` environment file:
+
 ```bash
 cp .env.example .env
 ```
 
 Open `.env` and fill in your API credentials:
+
 ```env
 OPENROUTER_API_KEY=your_openrouter_api_key_here
 GROQ_API_KEY=your_groq_api_key_here
@@ -125,24 +140,26 @@ GROQ_API_KEY=your_groq_api_key_here
 
 ### Method A: One-Click Launch (Recommended)
 
-* **Windows**: Double-click [run.bat](file:///c:/proj/debateX/run.bat) from your file explorer, or run it in Command Prompt:
+- **Windows**: Double-click [run.bat](file:///c:/proj/debateX/run.bat) from your file explorer, or run it in Command Prompt:
   ```cmd
   run.bat
   ```
-* **macOS / Linux**: Grant execution permissions and run [start.sh](file:///c:/proj/debateX/start.sh):
+- **macOS / Linux**: Grant execution permissions and run [start.sh](file:///c:/proj/debateX/start.sh):
   ```bash
   chmod +x start.sh
   ./start.sh
   ```
 
-*These scripts automatically resolve dependencies (using `uv sync` & `npm install`), initialize local virtual environments, and boot up both the FastAPI backend server (port `8001`) and the Vite React frontend (port `5173`).*
+_These scripts automatically resolve dependencies (using `uv sync` & `npm install`), initialize local virtual environments, and boot up both the FastAPI backend server (port `8001`) and the Vite React frontend (port `5173`)._
 
 ---
 
 ### Method B: Manual Commands
 
 #### 1. Setup and Run the Backend
+
 Using **`uv`** (Recommended):
+
 ```bash
 # Sync dependencies and start uvicorn
 uv sync
@@ -150,6 +167,7 @@ uv run python -m backend.main
 ```
 
 Using standard **`pip`**:
+
 ```bash
 # Create a virtual environment
 python -m venv .venv
@@ -159,15 +177,18 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python -m backend.main
 ```
-*The backend server will run at: **http://localhost:8001***
+
+\*The backend server will run at: **http://localhost:8001\***
 
 #### 2. Setup and Run the Frontend
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-*The frontend development server will run at: **http://localhost:5173***
+
+\*The frontend development server will run at: **http://localhost:5173\***
 
 ---
 
@@ -212,4 +233,5 @@ uv run python -m unittest tests/test_router.py
 ---
 
 ## License
+
 Licensed under the [MIT License](LICENSE).
