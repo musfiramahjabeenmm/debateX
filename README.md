@@ -18,6 +18,14 @@ The platform passes query contexts through an advanced, anonymized multi-round c
 
 ---
 
+## User Interface Showcase
+
+| Stage 1: Respond | Stage 2: Peer Review & Rank | Stage 3: Chairman Synthesis |
+| :---: | :---: | :---: |
+| ![Stage 1: Respond](public/images/stage1.png) | ![Stage 2: Peer Review & Rank](public/images/stage2.png) | ![Stage 3: Chairman Synthesis](public/images/stage3.png) |
+
+---
+
 ## Key Features
 
 ### 1. Advanced 5-Round Deliberation Pipeline
