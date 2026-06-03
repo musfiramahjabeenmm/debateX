@@ -13,13 +13,13 @@
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  padding-bottom: 120px; /* Space for input box */
+  padding-bottom: 0;
 }
 
 .main-content.centered {
   justify-content: center;
   align-items: center;
-  padding-bottom: 180px;
+  padding-bottom: 160px;
 }
 
 .hero-section {
@@ -58,20 +58,26 @@
   max-width: 800px;
   width: 100%;
   margin: 0 auto;
-  padding: 40px 24px;
+  padding: 40px 24px 220px 24px; /* bottom padding allows content to scroll fully above input container */
 }
 
 .input-container {
   position: absolute;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 800px;
-  padding: 0 24px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(180deg, transparent 0%, var(--bg-primary) 35%);
+  padding: 40px 24px 24px 24px;
+  pointer-events: none;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .input-box {
+  width: 100%;
+  max-width: 800px;
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 16px;
@@ -80,6 +86,7 @@
   flex-direction: column;
   gap: 8px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
 }
 
 .message-input {
@@ -98,23 +105,7 @@
 .input-footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.input-actions {
-  display: flex;
-  gap: 4px;
-}
-
-.action-btn {
-  padding: 8px;
-  border-radius: 8px;
-  color: var(--text-secondary);
-}
-
-.action-btn:hover {
-  background-color: var(--bg-tertiary);
-  color: var(--text-primary);
+  justify-content: flex-end;
 }
 
 .send-btn {
@@ -139,6 +130,7 @@
   font-size: 0.75rem;
   color: var(--text-secondary);
   margin-top: 12px;
+  pointer-events: auto;
 }
 
 /* Messages styling */
@@ -248,6 +240,12 @@
   border-radius: 4px;
   font-family: monospace;
   color: var(--accent-cyan);
+}
+
+.error-badge.groq-error {
+  background-color: rgba(245, 80, 54, 0.12);
+  color: #f55036;
+  border: 1px solid rgba(245, 80, 54, 0.35);
 }
 
 @keyframes fadeIn {

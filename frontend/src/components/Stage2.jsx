@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import './Stage2.css';
 
 function deAnonymizeText(text, labelToModel) {
@@ -48,24 +49,27 @@ export default function Stage2({ rankings, labelToModel, aggregateRankings }) {
           {rankings[activeTab].model}
         </div>
         <div className="ranking-content markdown-content">
-          <ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {deAnonymizeText(rankings[activeTab].ranking, labelToModel)}
           </ReactMarkdown>
         </div>
 
         {rankings[activeTab].parsed_ranking &&
          rankings[activeTab].parsed_ranking.length > 0 && (
-          <div className="parsed-ranking">
-            <strong>Extracted Ranking:</strong>
-            <ol>
+          <div className="parsed-ranking mt-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+            <h4 className="text-cyan-400 mb-3 text-sm font-semibold uppercase tracking-wider">Extracted Ranking:</h4>
+            <div className="space-y-2 text-gray-300">
               {rankings[activeTab].parsed_ranking.map((label, i) => (
-                <li key={i}>
-                  {labelToModel && labelToModel[label]
-                    ? labelToModel[label].split('/')[1] || labelToModel[label]
-                    : label}
-                </li>
+                <div key={i} className="flex items-start gap-3">
+                  <span className="font-mono text-gray-400 shrink-0">{i + 1}.</span>
+                  <span>
+                    {labelToModel && labelToModel[label]
+                      ? labelToModel[label].split('/')[1] || labelToModel[label]
+                      : label}
+                  </span>
+                </div>
               ))}
-            </ol>
+            </div>
           </div>
         )}
       </div>
