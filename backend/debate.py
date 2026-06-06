@@ -1,8 +1,8 @@
 """3-stage DebateX orchestration."""
 
 from typing import List, Dict, Any, Tuple
-from .llm import query_models_parallel, query_model
-from .config import debate_MODELS, moderator_MODEL
+from llm import query_models_parallel, query_model
+from config import debate_MODELS, moderator_MODEL
 
 
 async def stage1_collect_responses(user_query: str) -> List[Dict[str, Any]]:
@@ -573,24 +573,29 @@ async def stage5_chairman_synthesis(
     ]
 
     import json
+    # Truncate responses to stay within token limits
+    for round_data in deliberation_history:
+        if isinstance(round_data.get('data'), list):
+            for item in round_data['data']:
+                for key in ['response', 'ranking', 'critique']:
+                    if key in item and isinstance(item[key], str):
+                        item[key] = item[key][:300] + "..." if len(item[key]) > 300 else item[key]
     history_json = json.dumps(deliberation_history, indent=2)
 
-    # Narrative formatting for the model
     stage1_summary = "\n\n".join([
-        f"- Model: {r['model']}\n  Response: {r['response']}"
+        f"- Model: {r['model']}\n  Response: {r['response'][:300]}..."
         for r in stage1_results
     ])
 
     stage2_summary = "\n\n".join([
-        f"- Model: {r['model']}\n  Peer Ranking Content: {r['ranking']}"
+        f"- Model: {r['model']}\n  Peer Ranking Content: {r['ranking'][:300]}..."
         for r in stage2_results
     ])
 
     stage3_summary = "\n\n".join([
-        f"- Model: {r['model']} ({r.get('decision', 'REVISE')}):\n  Answer: {r['response']}"
+        f"- Model: {r['model']} ({r.get('decision', 'REVISE')}):\n  Answer: {r['response'][:300]}..."
         for r in stage3_results
     ])
-
     chairman_prompt = f"""You are the Chairman/Moderator of a 5-round LLM deliberation council.
 
 The council has debated the following question:

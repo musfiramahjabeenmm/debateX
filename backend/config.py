@@ -13,28 +13,15 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
-# Dynamic Model Configuration based on available keys
+# Use only Groq models
 debate_MODELS = []
 moderator_MODEL = ""
 
-if OPENROUTER_API_KEY:
-    debate_MODELS.extend([
-        "deepseek/deepseek-v4-flash:free",
-        "z-ai/glm-4.5-air:free",
-        "liquid/lfm-2.5-1.2b-instruct:free",
-        "nvidia/nemotron-3-nano-30b-a3b:free",
-    ])
-    moderator_MODEL = "deepseek/deepseek-v4-flash:free"
-
 if GROQ_API_KEY:
-    debate_MODELS.extend([
-        "groq/llama-3.1-8b-instant",
-        "groq/openai/gpt-oss-120b",
-        "groq/qwen/qwen3-32b",
-        "groq/llama-3.3-70b-versatile",
-    ])
-    # Prioritize Groq's high-performance model as the moderator
+    debate_MODELS = [
+        "groq/openai/gpt-oss-20b",
+        "groq/meta-llama/llama-4-scout-17b-16e-instruct",
+    ]
     moderator_MODEL = "groq/llama-3.3-70b-versatile"
-
-# Data directory for conversation storage
+# Data directory
 DATA_DIR = "data/conversations"

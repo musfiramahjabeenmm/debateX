@@ -2,7 +2,7 @@
 
 import httpx
 from typing import List, Dict, Any, Optional
-from .config import GROQ_API_KEY, GROQ_API_URL
+from config import GROQ_API_KEY, GROQ_API_URL
 
 async def query_groq(
     model: str,
@@ -15,7 +15,7 @@ async def query_groq(
     }
 
     payload = {
-        "model": model,
+        "model": model.replace("groq/", ""),
         "messages": messages,
     }
 

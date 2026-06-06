@@ -1,8 +1,8 @@
 import re
 from dataclasses import dataclass, field
 from typing import List, Dict, Tuple
-from .config import debate_MODELS, moderator_MODEL
-from .llm import query_model
+from config import debate_MODELS, moderator_MODEL
+from llm import query_model
 
 
 @dataclass

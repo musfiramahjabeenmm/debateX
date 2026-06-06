@@ -2,8 +2,8 @@
 
 from typing import List, Dict, Any, Optional
 import asyncio
-from .openrouter import query_openrouter
-from .groq import query_groq
+from openrouter import query_openrouter
+from groq import query_groq
 
 async def query_model(
     model: str,
