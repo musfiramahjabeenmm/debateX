@@ -94,7 +94,7 @@ function App() {
         round4: null,
         stage3: null,
         metadata: null,
-        loading: { stage1: false, stage2: false, round3: false, round4: false, stage3: false },
+        loading: { stage1: true, stage2: false, round3: false, round4: false, stage3: false },
       };
 
       setCurrentConversation((prev) => ({
