@@ -56,13 +56,13 @@ export default function Stage2({ rankings, labelToModel, aggregateRankings }) {
 
         {rankings[activeTab].parsed_ranking &&
          rankings[activeTab].parsed_ranking.length > 0 && (
-          <div className="parsed-ranking mt-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
-            <h4 className="text-cyan-400 mb-3 text-sm font-semibold uppercase tracking-wider">Extracted Ranking:</h4>
-            <div className="space-y-2 text-gray-300">
+          <div className="parsed-ranking">
+            <h4 className="parsed-ranking-title">Extracted Ranking:</h4>
+            <div className="parsed-ranking-list">
               {rankings[activeTab].parsed_ranking.map((label, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <span className="font-mono text-gray-400 shrink-0">{i + 1}.</span>
-                  <span>
+                <div key={i} className="parsed-ranking-item">
+                  <span className="parsed-rank-num">{i + 1}.</span>
+                  <span className="parsed-rank-label">
                     {labelToModel && labelToModel[label]
                       ? labelToModel[label].split('/')[1] || labelToModel[label]
                       : label}

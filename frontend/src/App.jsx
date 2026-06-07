@@ -193,6 +193,10 @@ function App() {
 
   return (
     <div className={`app ${isSidebarExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'}`}>
+      <div className="ambient-bg">
+        <div className="glow-orb-1"></div>
+        <div className="glow-orb-2"></div>
+      </div>
       <Sidebar
         isExpanded={isSidebarExpanded}
         onToggle={() => setIsSidebarExpanded(!isSidebarExpanded)}

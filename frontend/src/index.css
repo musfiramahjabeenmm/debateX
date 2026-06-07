@@ -1,23 +1,44 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --bg-primary: #171717;
-  --bg-secondary: #212121;
-  --bg-tertiary: #2f2f2f;
-  --text-primary: #ececec;
-  --text-secondary: #b4b4b4;
-  --accent-blue: #67e8f9;
-  --accent-cyan: #22d3ee;
-  --border-color: rgba(255, 255, 255, 0.1);
-  --sidebar-width: 48px;
-  --header-height: 56px;
+  /* Sleek Dark Palette */
+  --bg-primary: #0a0b10;
+  --bg-secondary: #121420;
+  --bg-tertiary: #1b1e2e;
+  
+  /* Glassmorphism Presets */
+  --glass-bg-primary: rgba(10, 11, 16, 0.75);
+  --glass-bg-secondary: rgba(18, 20, 32, 0.65);
+  --glass-bg-tertiary: rgba(27, 30, 46, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-border-hover: rgba(255, 255, 255, 0.12);
+  --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  --glass-backdrop: blur(16px);
+  
+  /* Text Presets */
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  
+  /* Vibrant Brand Accents */
+  --accent-cyan: #06b6d4;
+  --accent-blue: #3b82f6;
+  --accent-violet: #8b5cf6;
+  --accent-gradient: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #8b5cf6 100%);
+  --accent-gradient-hover: linear-gradient(135deg, #0891b2 0%, #2563eb 50%, #7c3aed 100%);
+  --border-color: rgba(255, 255, 255, 0.08);
   
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  line-height: 1.5;
+  line-height: 1.6;
   font-weight: 400;
   color-scheme: dark;
   background-color: var(--bg-primary);
   color: var(--text-primary);
+  
+  /* Layout */
+  --sidebar-expanded-width: 260px;
+  --sidebar-collapsed-width: 68px;
+  --header-height: 56px;
 }
 
 * {
@@ -31,12 +52,55 @@ body {
   min-height: 100vh;
   background-color: var(--bg-primary);
   overflow: hidden;
+  position: relative;
+}
+
+/* Background Ambient Glows */
+.ambient-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.glow-orb-1 {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.06) 0%, rgba(59, 130, 246, 0.02) 50%, transparent 100%);
+  top: -100px;
+  right: -100px;
+  filter: blur(80px);
+  animation: float 20s infinite alternate ease-in-out;
+}
+
+.glow-orb-2 {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.05) 0%, rgba(6, 182, 212, 0.01) 50%, transparent 100%);
+  bottom: -150px;
+  left: -100px;
+  filter: blur(70px);
+  animation: float 25s infinite alternate-reverse ease-in-out;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(30px) scale(1.1); }
+  100% { transform: translateY(-10px) scale(0.95); }
 }
 
 #root {
   height: 100vh;
   width: 100vw;
   display: flex;
+  position: relative;
+  z-index: 1;
 }
 
 button {
@@ -45,12 +109,13 @@ button {
   color: inherit;
   cursor: pointer;
   font-family: inherit;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -58,18 +123,20 @@ button {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 99px;
+  transition: background 0.2s;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 /* Global markdown styling */
 .markdown-content {
   line-height: 1.6;
   font-size: 0.95rem;
+  color: var(--text-primary);
 }
 
 .markdown-content p {
@@ -82,7 +149,8 @@ button {
 
 .markdown-content h1, .markdown-content h2, .markdown-content h3 {
   margin: 1.5rem 0 1rem 0;
-  color: var(--text-primary);
+  color: #fff;
+  font-weight: 600;
 }
 
 .markdown-content ul, .markdown-content ol {
@@ -90,52 +158,58 @@ button {
   padding-left: 1.5rem;
 }
 
+.markdown-content li {
+  margin-bottom: 0.4rem;
+}
+
 .markdown-content pre {
-  background: var(--bg-tertiary);
-  padding: 1rem;
-  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 1.25rem;
+  border-radius: 12px;
   overflow-x: auto;
-  margin-bottom: 1rem;
-  border: 1px solid var(--border-color);
+  margin-bottom: 1.25rem;
+  border: 1px solid var(--glass-border);
 }
 
 .markdown-content code {
-  background: var(--bg-tertiary);
-  padding: 0.2rem 0.4rem;
-  border-radius: 4px;
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  background: rgba(255, 255, 255, 0.07);
+  padding: 0.2rem 0.45rem;
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 0.85em;
+  color: #e2e8f0;
 }
 
 .markdown-content pre code {
   background: none;
   padding: 0;
   font-size: 0.9em;
+  color: inherit;
 }
 
 /* Table styling for markdown tables */
 .markdown-content table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
   margin-bottom: 1.5rem;
   font-size: 0.9rem;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
 }
 
 .markdown-content th {
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
+  background-color: rgba(255, 255, 255, 0.03);
+  color: #fff;
   font-weight: 600;
   text-align: left;
-  padding: 0.75rem 1rem;
+  padding: 0.85rem 1.2rem;
   border-bottom: 2px solid var(--border-color);
 }
 
 .markdown-content td {
-  padding: 0.75rem 1rem;
+  padding: 0.85rem 1.2rem;
   border-bottom: 1px solid var(--border-color);
   color: var(--text-secondary);
 }
@@ -145,5 +219,5 @@ button {
 }
 
 .markdown-content tr:hover {
-  background-color: rgba(255, 255, 255, 0.02);
+  background-color: rgba(255, 255, 255, 0.015);
 }

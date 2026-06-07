@@ -1,0 +1,245 @@
+# DebateX Project Report: Architecture, Deliberation Pipeline, API & Tech Stack
+
+DebateX is a self-hosted, multi-LLM deliberation system designed to produce high-confidence, synthesized responses to complex queries. It implements a structured multi-stage debate protocol using a council of diverse language models and an orchestrating Moderator (Chairman).
+
+---
+
+## 🏗️ System Architecture
+
+DebateX employs a decoupled dual-tier architecture consisting of a high-performance **FastAPI backend** (Python) and a modern **React client** (Vite).
+
+```
+debateX/
+├── backend/                  # FastAPI Python Service
+│   ├── config.py             # Model definitions, API urls, directories
+│   ├── main.py               # API Router, endpoints & SSE streamer
+│   ├── debate.py             # 5-stage deliberation pipeline flow
+│   ├── roles.py              # Cognitive role allocation module
+│   ├── router.py             # Query classifier & model router
+│   ├── storage.py            # Local JSON storage manager
+│   ├── llm.py                # LLM request facade (Groq & OpenRouter)
+│   ├── groq.py               # Groq service client
+│   └── openrouter.py         # OpenRouter service client
+├── frontend/                 # React 19 Client
+│   ├── src/
+│   │   ├── components/       # Sub-interface and Stage elements
+│   │   ├── App.jsx           # State coordinator & SSE stream listener
+│   │   ├── api.js            # Network client wrapper
+│   │   └── index.css         # Styling system & theme variables
+│   └── package.json          # Dependencies list
+├── data/                     # Ephemeral / JSON storage
+│   └── conversations/        # Saved conversation objects
+└── tests/                    # Backend testing suites
+```
+
+---
+
+## 🔄 Core Working Mechanism: The 5-Round Deliberation Pipeline
+
+The core orchestration resides in [debate.py](file:///c:/projects/debateX/backend/debate.py). When a query is received, the backend classifies the topic and initiates a 5-round pipeline, streaming updates to the user in real time.
+
+```mermaid
+graph TD
+    UserQuery[User Query] --> RouteClassifier[Query Classifier / Router]
+    RouteClassifier --> AssignRoles[Assign Cognitive Roles & Prompts]
+    
+    subgraph Deliberation Pipeline
+        AssignRoles --> Round1[Round 1: Collect Initial Answers]
+        Round1 --> Round2[Round 2: Peer Review & Ranking]
+        Round2 --> Round3[Round 3: Revise or Defend]
+        Round3 --> Round4[Round 4: Challenger Critique]
+        Round4 --> Round5[Round 5: Chairman Synthesis]
+    end
+    
+    Round5 --> FinalResponse[Definitive Synthesized Response]
+```
+
+### Round 1: Collect Initial Answers
+- **Action**: Queries all configured council models in parallel with the user's question.
+- **Async Execution**: Employs `asyncio.gather` with automatic timeouts to prevent individual model lag or API outages from blocking the pipeline.
+- **Failures**: Degrades gracefully by continuing with whatever subset of responses succeed.
+
+### Round 2: Peer Review & Ranking
+- **Action**: Anonymizes Round 1 responses as `Response A`, `Response B`, etc. Each council model reads all responses and evaluates their strengths and flaws.
+- **Ranking**: Each model appends a formatted `FINAL RANKING:` section containing a numbered list of labels (e.g. `1. Response C`).
+- **Aggregation**: The backend parses rankings from peer reviews using regex patterns and calculates the average position/rank for each model. The model with the lowest average position is designated the **Leading Model**.
+
+### Round 3: Revise or Defend
+- **Action**: Council models receive all peer reviews, aggregate standings, and their own anonymous label.
+- **Decision**: Models must analyze peer reviews and output:
+  - `DECISION: REVISE` followed by a complete, corrected response incorporating critiques.
+  - `DECISION: DEFEND` followed by a logical justification of their original reasoning.
+
+### Round 4: Challenger Critique
+- **Action**: Assigns the lowest-ranked model from Round 2 as the **Challenger**.
+- **Objective**: Aggressively critique the Leading Model's Round 3 response to uncover hidden flaws, logic gaps, or unaddressed edge cases.
+
+### Round 5: Chairman Synthesis
+- **Action**: The Moderator (Chairman) model is fed the complete JSON history of the deliberation (all initial answers, evaluations, aggregate standings, revisions/defenses, and the Challenger's critique).
+- **Objective**: Evaluates the entire transcript, addresses or incorporates the Challenger's critiques, and outputs the final master synthesis.
+- **Fallback**: If the Chairman model fails, it falls back to alternative debate models or uses the Round 3 Leading Answer to prevent showing errors to the user.
+
+---
+
+## 🧠 Dynamic Cognitive Roles & Prompts (`backend/roles.py`)
+
+To ensure a balanced dialectic, the [roles.py](file:///c:/projects/debateX/backend/roles.py) module dynamically assigns specific roles to the council based on the query classification:
+
+1. **Chairman**: Moderates, weighs arguments, and synthesizes the final solution.
+2. **Devil's Advocate**: Challenges ideas, exposes edge cases, and finds vulnerabilities.
+3. **Fact-Checker**: Verifies statistics, formulas, parameters, and historical facts.
+4. **Steelmanner**: Represents opposing viewpoints and improves arguments of peers.
+5. **Lead Reasoner**: Drafts step-by-step solutions and responses.
+
+### Shift-Based Rotation
+To eliminate static bias (e.g., a specific model always being the Devil's Advocate), the roles list is shifted circularly based on a deterministic offset `query_index % len(models)`.
+
+### Custom Context Prompts
+System prompts for each role are dynamically generated by mapping the role to one of five cognitive categories:
+*   `technical`
+*   `creative`
+*   `factual`
+*   `ethical`
+*   `math`
+
+---
+
+## 🔀 Query Classifier & Router (`backend/router.py`)
+
+The [router.py](file:///c:/projects/debateX/backend/router.py) module optimizes model selections, predicts query costs, and sets interface configurations before the debate starts.
+
+### 1. Dual-Path Classification
+- **Primary Route**: Sends a quick classification prompt to a free/low-latency model (e.g. DeepSeek Free) requesting only the category name.
+- **Fallback Route**: If the API call fails or times out, a local regex-based keyword classifier runs to match domain-specific patterns.
+
+### 2. Category Configurations
+Depending on the category resolved, the system adjusts behavior:
+*   **technical/code**: Enables Fact-Checker web access, makes the Disagreement Panel mandatory, and routes to coding models.
+*   **factual/research**: Enables Fact-Checker web access and the Disagreement Panel.
+*   **math/logic**: Enables the Disagreement Panel and routes to math/reasoning models.
+*   **creative** & **ethical/philosophical**: Routes to highly articulate models and disables peer disagreement panels.
+
+### 3. Predicted Query Cost Estimation
+Calculates anticipated API costs in USD before execution based on:
+$$\text{Cost} = \sum_{m \in \text{Council}} \text{Rate}_m \cdot \text{Tokens} + \text{Challenger} \cdot \text{Tokens} + \text{Chairman} \cdot \text{Tokens}$$
+It uses standard input/output token estimates tailored to the roles of each round and rates from the local `PRICING_TABLE`.
+
+---
+
+## ⚡ API Reference
+
+All endpoints are hosted on `http://localhost:8001` (to prevent collision with common local servers).
+
+### REST Endpoints
+
+#### Health Check
+*   **Method**: `GET`
+*   **Path**: `/`
+*   **Response (JSON)**: `{"status": "ok", "service": "DebateX API"}`
+
+#### List Conversations
+*   **Method**: `GET`
+*   **Path**: `/api/conversations`
+*   **Response**: Array of metadata lists (newest first, filters out empty conversations).
+
+#### Create Conversation
+*   **Method**: `POST`
+*   **Path**: `/api/conversations`
+*   **Response**: `{"id": "uuid-string", "created_at": "timestamp", "title": "New Conversation", "messages": []}`
+
+#### Get Conversation
+*   **Method**: `GET`
+*   **Path**: `/api/conversations/{id}`
+*   **Response**: Complete history object.
+
+#### Rename Conversation
+*   **Method**: `PUT`
+*   **Path**: `/api/conversations/{id}`
+*   **Body**: `{"title": "New Title"}`
+
+#### Delete Conversation
+*   **Method**: `DELETE`
+*   **Path**: `/api/conversations/{id}`
+
+---
+
+### Server-Sent Events (SSE) Stream
+*   **Method**: `POST`
+*   **Path**: `/api/conversations/{id}/message/stream`
+*   **Request Body**: `{"content": "User prompt content"}`
+*   **Header**: `Content-Type: text/event-stream`
+
+The stream yields data lines (`data: { ... }`) indicating stage progressions and payloads:
+
+| SSE Event Type | Payload Data | Description |
+| :--- | :--- | :--- |
+| `stage1_start` | `{}` | Initial answers collection begins. |
+| `stage1_complete` | `{"data": [{"model": "...", "response": "..."}]}` | Emitted with all initial answers. |
+| `stage2_start` | `{}` | Anonymized peer reviews begin. |
+| `stage2_complete` | `{"data": [...], "metadata": {"label_to_model": {...}, "aggregate_rankings": [...]}}` | Emitted with evaluations and sorted rankings. |
+| `round3_start` | `{}` | Revise or defend round begins. |
+| `round3_complete` | `{"data": [{"model": "...", "decision": "REVISE/DEFEND", "response": "..."}]}` | Emitted with revisions or defense explanations. |
+| `round4_start` | `{}` | Challenger critique round begins. |
+| `round4_complete` | `{"data": {"model": "...", "response": "...", ...}}` | Emitted with target and critic content. |
+| `stage3_start` | `{}` | Chairman synthesis starts. |
+| `stage3_complete` | `{"data": {"model": "...", "response": "..."}}` | Emitted with final synthesized master response. |
+| `title_complete` | `{"data": {"title": "..."}}` | Emitted with generated chat title. |
+| `complete` | `{}` | Deliberation saved, stream closes. |
+| `error` | `{"message": "..."}` | Stream aborted due to a fatal error. |
+
+---
+
+## 💻 Tech Stack
+
+### Backend
+*   **Language**: Python 3.12 (managed via `pyproject.toml` and `uv.lock`)
+*   **Web Framework**: **FastAPI** (asynchronous request handling)
+*   **Server**: **Uvicorn**
+*   **HTTP Client**: **HTTPX** (for asynchronous API communications to LLM providers)
+*   **Model Providers**:
+    *   **Groq**: Primary provider for high-speed, high-performance models (`llama-3.3-70b-versatile`, `llama-3.1-8b-instant`, `openai/gpt-oss-120b`, `qwen/qwen3-32b`).
+    *   **OpenRouter**: Secondary/Free tier provider (`deepseek-v4-flash`, `glm-4.5-air`, etc.).
+
+### Frontend
+*   **Framework**: **React 19** & **Vite 7** (high performance bundler)
+*   **Styling**: Vanilla CSS utilizing design tokens, custom transitions, responsive grids, and dark mode layouts.
+*   **Markdown Rendering**: `react-markdown` with syntax highlighting support for code blocks.
+*   **Event Handling**: Native EventSource / SSE parsing client in `frontend/src/api.js`.
+
+---
+
+## 💾 Storage Schema (`backend/storage.py`)
+
+DebateX utilizes file-based JSON persistence in the directory `data/conversations/`. 
+
+```json
+{
+  "id": "uuid-v4-string",
+  "created_at": "ISO-8601-UTC-timestamp",
+  "title": "Short Summarized Title",
+  "messages": [
+    {
+      "role": "user",
+      "content": "User query text"
+    },
+    {
+      "role": "assistant",
+      "stage1": [ { "model": "...", "response": "..." } ],
+      "stage2": [ { "model": "...", "ranking": "...", "parsed_ranking": [...] } ],
+      "stage3": { "model": "...", "response": "..." },
+      "rounds": [
+        { "round": 1, "type": "initial_answers", "data": [...] },
+        { "round": 2, "type": "peer_review", "data": [...] },
+        { "round": 3, "type": "revise_or_defend", "data": [...] },
+        { "round": 4, "type": "challenger", "data": {...} },
+        { "round": 5, "type": "chairman_synthesis", "data": {...} }
+      ],
+      "metadata": {
+        "label_to_model": { "Response A": "groq/qwen/qwen3-32b", ... },
+        "aggregate_rankings": [ { "model": "...", "average_rank": 1.5, ... } ]
+      }
+    }
+  ]
+}
+```
+*Note: Models evaluate each other anonymized. The de-anonymization mapping (`label_to_model`) is stored in metadata and resolved dynamically in the UI.*
