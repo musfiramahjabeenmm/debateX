@@ -9,9 +9,9 @@ import uuid
 import json
 import asyncio
 
-import storage
-import debate
-from debate import (
+from . import storage
+from . import debate
+from .debate import (
     run_full_debate,
     generate_conversation_title,
     stage1_collect_responses,

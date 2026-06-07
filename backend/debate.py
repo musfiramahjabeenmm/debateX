@@ -1,8 +1,8 @@
 """3-stage DebateX orchestration."""
 
 from typing import List, Dict, Any, Tuple
-from llm import query_models_parallel, query_model
-from config import debate_MODELS, moderator_MODEL
+from .llm import query_models_parallel, query_model
+from .config import debate_MODELS, moderator_MODEL
 
 
 async def stage1_collect_responses(user_query: str) -> List[Dict[str, Any]]:

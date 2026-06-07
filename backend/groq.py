@@ -2,7 +2,7 @@
 
 import httpx
 from typing import List, Dict, Any, Optional
-from config import GROQ_API_KEY, GROQ_API_URL
+from .config import GROQ_API_KEY, GROQ_API_URL
 
 async def query_groq(
     model: str,
