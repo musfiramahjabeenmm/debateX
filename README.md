@@ -127,7 +127,9 @@ Create and configure your `.env` environment file:
 cp .env.example .env
 ```
 
-Open `.env` and fill in your API credentials:
+Open `.env` and fill in your API credentials. You will need to generate keys from both platforms:
+- **Groq API Key**: Get it from the [Groq Cloud Console](https://console.groq.com/keys)
+- **OpenRouter API Key**: Get it from the [OpenRouter Platform](https://openrouter.ai/keys)
 
 ```env
 OPENROUTER_API_KEY=your_openrouter_api_key_here
