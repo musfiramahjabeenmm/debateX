@@ -197,6 +197,10 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
             # Round 1: Collect responses
             yield f"data: {json.dumps({'type': 'stage1_start'})}\n\n"
             stage1_results = await stage1_collect_responses(request.content)
+            
+            if not stage1_results:
+                raise ValueError("All models failed to respond in Stage 1. This is likely due to API rate limits (especially on Groq/OpenRouter) or incorrect model configuration.")
+                
             yield f"data: {json.dumps({'type': 'stage1_complete', 'data': stage1_results})}\n\n"
 
             # Round 2: Collect rankings
