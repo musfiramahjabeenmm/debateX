@@ -20,7 +20,8 @@ async def query_model(
         return await query_groq(actual_model, messages, timeout)
     else:
         # Default to OpenRouter
-        return await query_openrouter(model, messages, timeout)
+        actual_model = model[11:] if model.startswith("openrouter/") else model
+        return await query_openrouter(actual_model, messages, timeout)
 
 async def query_models_parallel(
     models: List[str],
