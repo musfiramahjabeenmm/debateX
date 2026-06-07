@@ -189,30 +189,31 @@
 .debate-timeline::before {
   content: '';
   position: absolute;
-  left: 22px;
+  left: 36px;
   top: 32px;
   bottom: 32px;
   width: 2px;
-  background: linear-gradient(to bottom, var(--border-color), rgba(6, 182, 212, 0.2) 50%, var(--accent-blue) 100%);
+  background: linear-gradient(to bottom, rgba(6, 182, 212, 0.3) 0%, rgba(6, 182, 212, 0.3) 80%, rgba(59, 130, 246, 0.6) 100%);
   z-index: 1;
 }
 
 .timeline-card {
-  background: var(--glass-bg-secondary);
-  border: 1px solid var(--glass-border);
-  border-radius: 14px;
+  background: linear-gradient(rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.02)), var(--bg-primary);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
   overflow: hidden;
   z-index: 2;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  position: relative;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .timeline-card:hover {
-  border-color: var(--glass-border-hover);
+  border-color: rgba(255, 255, 255, 0.08);
+  background: linear-gradient(rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.03)), var(--bg-primary);
 }
 
 .timeline-card.loading {
-  background: rgba(255, 255, 255, 0.01);
+  background: linear-gradient(rgba(255, 255, 255, 0.01), rgba(255, 255, 255, 0.01)), var(--bg-primary);
   border-style: dashed;
   border-color: rgba(6, 182, 212, 0.3);
 }
@@ -238,27 +239,29 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border-color);
+  background: linear-gradient(rgba(6, 182, 212, 0.08), rgba(6, 182, 212, 0.08)), var(--bg-primary);
+  border: 1px solid rgba(6, 182, 212, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--accent-cyan);
   transition: all 0.3s ease;
   flex-shrink: 0;
+  z-index: 3;
+  position: relative;
 }
 
 .timeline-card.completed .step-badge {
-  background: rgba(16, 185, 129, 0.1);
-  border-color: rgba(16, 185, 129, 0.4);
-  color: #10b981;
+  background: linear-gradient(rgba(6, 182, 212, 0.12), rgba(6, 182, 212, 0.12)), var(--bg-primary);
+  border-color: rgba(6, 182, 212, 0.6);
+  color: var(--accent-cyan);
 }
 
 .timeline-card.loading .step-badge {
-  background: rgba(6, 182, 212, 0.1);
+  background: linear-gradient(rgba(6, 182, 212, 0.1), rgba(6, 182, 212, 0.1)), var(--bg-primary);
   border-color: var(--accent-cyan);
   color: var(--accent-cyan);
   box-shadow: 0 0 10px rgba(6, 182, 212, 0.4);
@@ -269,15 +272,17 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(139, 92, 246, 0.15);
-  border: 1px solid rgba(139, 92, 246, 0.4);
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, rgba(59, 130, 246, 0.3) 100%), var(--bg-primary);
+  border: 1px solid rgba(139, 92, 246, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.1rem;
-  color: #a78bfa;
+  color: #fff;
   flex-shrink: 0;
-  box-shadow: 0 0 12px rgba(139, 92, 246, 0.2);
+  box-shadow: 0 0 16px rgba(139, 92, 246, 0.4);
+  z-index: 3;
+  position: relative;
 }
 
 .timeline-card.loading .step-badge-star {
@@ -293,15 +298,13 @@
 .step-title {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #f3f4f6;
+  color: #fff;
 }
 
 .step-title-final {
   font-size: 1rem;
   font-weight: 700;
-  background: linear-gradient(to right, #00f2fe, #4facfe);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--accent-cyan);
 }
 
 .step-subtitle {
@@ -310,7 +313,7 @@
 }
 
 .timeline-loader, .timeline-loader-final {
-  padding: 16px 20px;
+  padding: 16px 20px 16px 68px;
   font-size: 0.82rem;
   color: var(--text-secondary);
   font-style: italic;
@@ -336,15 +339,15 @@
 
 .timeline-body {
   border-top: 1px solid var(--border-color);
-  padding: 20px;
+  padding: 20px 20px 20px 68px;
   background: rgba(0, 0, 0, 0.1);
 }
 
 /* Highlight Stage 3 Final Synthesis */
 .timeline-card.highlight-synthesis {
-  background: rgba(6, 182, 212, 0.02);
-  border: 1px solid rgba(6, 182, 212, 0.25);
-  box-shadow: 0 8px 32px rgba(6, 182, 212, 0.08), 0 0 1px rgba(6, 182, 212, 0.2);
+  background: linear-gradient(rgba(6, 182, 212, 0.03), rgba(6, 182, 212, 0.03)), var(--bg-primary);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.1);
 }
 
 /* Global loading state */
